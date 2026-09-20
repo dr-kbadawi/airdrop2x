@@ -27,6 +27,9 @@ let package = Package(
         .target(name: "AirDrop2xCore", path: "Sources/AirDrop2xCore"),
         .executableTarget(name: "AirDrop2xApp", dependencies: ["AirDrop2xCore"], path: "Sources/AirDrop2xApp"),
         .executableTarget(name: "airdrop2x", dependencies: ["AirDrop2xCore"], path: "Sources/airdrop2x"),
+        .testTarget(name: "AirDrop2xCoreTests", dependencies: ["AirDrop2xCore"], path: "Tests/AirDrop2xCoreTests"),
+        .testTarget(name: "AirDrop2xAppTests", dependencies: ["AirDrop2xApp", "AirDrop2xCore"], path: "Tests/AirDrop2xAppTests"),
+        .testTarget(name: "airdrop2xCLITests", dependencies: ["airdrop2x"], path: "Tests/airdrop2xCLITests"),
     ],
     swiftLanguageVersions: [.v5]
 )

@@ -89,10 +89,14 @@ public enum Redirect {
             Log.info("parked real Downloads at \(config.parkedFolder)")
             return true
         case .missing:
-            guard fm.fileExists(atPath: config.parkedFolder) else { throw RedirectError("\(downloads) does not exist") }
-            try link(destination, at: downloads)
-            return true
+            throw RedirectError("\(downloads) does not exist")
         case .conflict(let why):
+            // Recoverable leftover of an interrupted switch-on: the real folder is already parked and
+            // only the link is missing. Anything else is a genuine conflict.
+            if !fm.fileExists(atPath: downloads), fm.fileExists(atPath: config.parkedFolder) {
+                try link(destination, at: downloads)
+                return true
+            }
             throw RedirectError(why)
         }
     }
@@ -143,6 +147,12 @@ public enum Redirect {
     /// for its lifetime. It is started on demand, so ending it after a switch makes the very next
     /// transfer use the new path instead of a stale one.
     public static func resetSharingHelper() {
+        sharingHelperResetter()
+    }
+
+    /// What `resetSharingHelper` does. Tests replace it; AIRDROP2X_NO_HELPER_RESET=1 disables it.
+    public static var sharingHelperResetter: () -> Void = {
+        if ProcessInfo.processInfo.environment["AIRDROP2X_NO_HELPER_RESET"] == "1" { return }
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/pkill")
         process.arguments = ["-x", "SharingXPCHelper"]
@@ -188,6 +198,9 @@ public final class RedirectDaemon {
         case fallback(original: String, rescuedTo: String?, error: String?)
     }
 
+    /// Where sharingd writes when it may not write to Downloads. Tests point this at a temp folder.
+    public static var fallbackFolder = airDropFallbackFolder
+
     public init() {}
 
     public func start() {
@@ -230,7 +243,7 @@ public final class RedirectDaemon {
     private func syncArrivalWatcher(status: Redirect.Status, config: Config) {
         if case .active(let destination) = status {
             guard arrivals == nil else { return }
-            let watcher = ArrivalWatcher(folders: [airDropFallbackFolder, destination], since: Date(), queue: queue) { [weak self] arrival in
+            let watcher = ArrivalWatcher(folders: [RedirectDaemon.fallbackFolder, destination], since: Date(), queue: queue) { [weak self] arrival in
                 self?.handleArrival(arrival, destination: destination)
             }
             watcher.start()
@@ -245,8 +258,8 @@ public final class RedirectDaemon {
         let name = (arrival.path as NSString).lastPathComponent
         var config = Config.load()
         let event: ArrivalEvent
-        if arrival.folder == airDropFallbackFolder {
-            Log.error("AirDrop fell back to \(airDropFallbackFolder) for \(name): macOS refused sharingd access to \(destination)")
+        if arrival.folder == RedirectDaemon.fallbackFolder {
+            Log.error("AirDrop fell back to \(RedirectDaemon.fallbackFolder) for \(name): macOS refused sharingd access to \(destination)")
             if config.grantVerified { config.grantVerified = false; try? config.save() }
             do {
                 let rescued = try Rescue.move(arrival.path, toDirectory: destination)

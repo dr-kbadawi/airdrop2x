@@ -104,6 +104,29 @@ Without the app running, `on` and `off` act once and immediately, with no watchi
   each switch so the next transfer uses the new path.
 - Set `AIRDROP2X_CONFIG_DIR` to use a separate settings directory (used for testing).
 
+## Development and tests
+
+```bash
+make test        # all suites
+make coverage    # per-file line coverage
+```
+
+Three test targets, all runnable with plain `swift test` (no Xcode project needed):
+
+- **AirDrop2xCoreTests**: unit tests for settings, destination checks, file inspection, the
+  protective ACL handling, every transition of the redirect state machine (including crash
+  leftovers and the ACL round trip), the arrival watcher and rescue, and the daemon's
+  reconciliation (switch on/off, destination vanishing and returning, launch rule, fallback
+  rescue, setup verification). Each test runs in its own temporary tree with a fake home folder;
+  notifications and the sharing-helper reset are captured instead of executed.
+- **AirDrop2xAppTests**: the menu model for every state, the drawn menu bar glyph (size, color,
+  ring separation), the switch rows, dialog icon centering, and the setup window's states.
+- **airdrop2xCLITests**: end-to-end runs of the built `airdrop2x` binary against an isolated
+  settings directory.
+
+Continuous integration (`.github/workflows/ci.yml`) builds, runs all tests with coverage, and
+packages an ad-hoc signed disk image as an artifact on every push and pull request.
+
 ## License
 
 Copyright © 2026 Dr. Karim Badawi, Techtag GmbH.

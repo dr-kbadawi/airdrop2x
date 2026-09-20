@@ -89,7 +89,10 @@ final class SetupWindowController: NSWindowController {
         window?.makeKeyAndOrderFront(nil)
     }
 
-    private func apply(_ state: State) {
+    private(set) var state: State = .instructions
+
+    func apply(_ state: State) {
+        self.state = state
         let destination = Config.load().destination ?? "your folder"
         buttons.arrangedSubviews.forEach { $0.removeFromSuperview() }
         spinner.stopAnimation(nil)
@@ -170,6 +173,12 @@ final class SetupWindowController: NSWindowController {
         }
         return result
     }
+
+    // Test hooks
+    var headingText: String { heading.stringValue }
+    var bodyText: String { body.attributedStringValue.length > 0 ? body.attributedStringValue.string : body.stringValue }
+    var statusText: String { statusLabel.stringValue }
+    var buttonTitles: [String] { buttons.arrangedSubviews.compactMap { ($0 as? NSButton)?.title } }
 
     private func addButton(_ title: String, _ action: Selector, key: String = "") {
         let button = NSButton(title: title, target: self, action: action)

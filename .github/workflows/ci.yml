@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+
+jobs:
+  test:
+    name: Build and test
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Toolchain
+        run: |
+          sudo xcode-select -s /Applications/Xcode_16.4.app 2>/dev/null || true
+          swift --version
+      - name: Build
+        run: swift build
+      - name: Test
+        env:
+          AIRDROP2X_NO_HELPER_RESET: "1"
+        run: swift test --enable-code-coverage 2>&1 | tee test.log | grep -E 'error|Executed|Suite .*(passed|failed)'
+      - name: Coverage summary
+        run: |
+          PROFDATA=$(find .build -name default.profdata | head -1)
+          BIN=$(find .build -name airdrop2xPackageTests.xctest -type d | head -1)/Contents/MacOS/airdrop2xPackageTests
+          xcrun llvm-cov report "$BIN" -instr-profile "$PROFDATA" -ignore-filename-regex='Tests/|\.build/' | tail -25
+      - name: Package (ad-hoc signed)
+        run: ./make-dmg.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AirDrop2X-adhoc
+          path: |
+            dist/*.dmg
+            test.log
+          if-no-files-found: error

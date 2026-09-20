@@ -102,22 +102,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let config = Config.load()
         status = Redirect.status(config)
         updateIcon()
+        let smStatus = SMAppService.mainApp.status
+        let model = MenuModel.make(config: config, status: status,
+                                   login: smStatus == .enabled ? .enabled : (smStatus == .requiresApproval ? .requiresApproval : .disabled))
 
         menu.autoenablesItems = false
         let headline = NSMenuItem(title: "", action: nil, keyEquivalent: "")
-        headline.attributedTitle = NSAttributedString(string: headlineText(config), attributes: [
-            .foregroundColor: headlineColor(config),
+        headline.attributedTitle = NSAttributedString(string: model.headline, attributes: [
+            .foregroundColor: Self.color(for: model.tone),
             .font: NSFont.menuFont(ofSize: 0),
         ])
         headline.isEnabled = true   // enabled so the color shows; it has no action
         menu.addItem(headline)
-        if let detail = detailText(config) {
+        if let detail = model.detail {
             let item = NSMenuItem(title: detail, action: nil, keyEquivalent: "")
             item.isEnabled = false
             menu.addItem(item)
         }
-        if let destination = config.destination {
-            let row = DestinationMenuItemView(path: shortPath(destination))
+        if let line = model.destinationLine {
+            let row = DestinationMenuItemView(path: String(line.dropFirst("Destination: ".count)))
             row.onClear = { [weak self] in self?.clearDestination() }
             let item = NSMenuItem(title: "Destination", action: nil, keyEquivalent: "")
             item.view = row
@@ -125,17 +128,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
         menu.addItem(.separator())
 
-        let switchRow = SwitchMenuItemView(title: "Redirect AirDrop", isOn: config.enabled, isEnabled: config.destination != nil)
+        let switchRow = SwitchMenuItemView(title: "Redirect AirDrop", isOn: model.switchOn, isEnabled: model.switchEnabled)
         switchRow.onChange = { [weak self] on in self?.setRedirect(on) }
         let switchItem = NSMenuItem(title: "Redirect AirDrop", action: nil, keyEquivalent: "")
         switchItem.view = switchRow
         menu.addItem(switchItem)
 
-        let choose = NSMenuItem(title: config.destination == nil ? "Choose Destination…" : "Change Destination…", action: #selector(chooseDestination), keyEquivalent: "")
+        let choose = NSMenuItem(title: model.chooseTitle, action: #selector(chooseDestination), keyEquivalent: "")
         choose.target = self
         menu.addItem(choose)
 
-        let setupItem = NSMenuItem(title: "First-time Setup Guide…", action: #selector(showSetup), keyEquivalent: "")
+        let setupItem = NSMenuItem(title: model.setupTitle, action: #selector(showSetup), keyEquivalent: "")
         setupItem.target = self
         menu.addItem(setupItem)
 
@@ -147,9 +150,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
         menu.addItem(.separator())
 
-        let loginStatus = SMAppService.mainApp.status
-        let loginRow = SwitchMenuItemView(title: loginStatus == .requiresApproval ? "Start at Login (approve in System Settings)" : "Start at Login",
-                                          isOn: loginStatus == .enabled, isEnabled: true)
+        let loginRow = SwitchMenuItemView(title: model.loginTitle, isOn: model.loginOn, isEnabled: true)
         loginRow.onChange = { [weak self] on in self?.setLoginItem(on) }
         let login = NSMenuItem(title: "Start at Login", action: nil, keyEquivalent: "")
         login.view = loginRow
@@ -165,43 +166,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(quit)
     }
 
-    private func headlineText(_ config: Config) -> String {
-        switch status {
-        case .active(let d):     return "AirDrop lands in: \(shortPath(d))"
-        case .inactive:          return "AirDrop lands in: Downloads"
-        case .dangling:          return "AirDrop: destination not reachable"
-        case .otherLink:         return "Downloads is a symlink made by something else"
-        case .missing:           return "No Downloads folder found"
-        case .conflict:          return "Attention needed"
+    static func color(for tone: MenuModel.Tone) -> NSColor {
+        switch tone {
+        case .active: return .systemGreen
+        case .idle:   return .systemOrange
+        case .none:   return .systemGray
         }
     }
 
-    private func headlineColor(_ config: Config) -> NSColor {
-        guard config.destination != nil else { return .secondaryLabelColor }
-        return status.isActive ? .systemGreen : .systemOrange
-    }
-
-    private func detailText(_ config: Config) -> String? {
-        switch status {
-        case .conflict(let why): return why
-        case .dangling(let d):   return "Waiting for \(shortPath(d)) to come back"
-        default:
-            guard let destination = config.destination else { return "Choose a destination folder to begin" }
-            if config.enabled, !Destination.isReachable(destination) { return "Waiting for \(shortPath(destination)) to come back" }
-            if !config.enabled, !config.grantVerified { return "First-time setup needed before first use" }
-            return nil
-        }
-    }
-
-    private func shortPath(_ path: String) -> String {
-        let home = NSHomeDirectory()
-        return path.hasPrefix(home + "/") ? "~" + path.dropFirst(home.count) : path
-    }
+    private func shortPath(_ path: String) -> String { MenuModel.shortPath(path) }
 
     private func updateIcon() {
         let config = Config.load()
-        let color: NSColor = config.destination == nil ? .systemGray : (status.isActive ? .systemGreen : .systemOrange)
-        statusItem.button?.image = StatusGlyph.image(color: color)
+        let tone: MenuModel.Tone = config.destination == nil ? .none : (status.isActive ? .active : .idle)
+        statusItem.button?.image = StatusGlyph.image(color: Self.color(for: tone))
         statusItem.button?.toolTip = Redirect.describe(status)
     }
 

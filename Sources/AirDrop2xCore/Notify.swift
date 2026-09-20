@@ -15,14 +15,24 @@
 
 import Foundation
 
-public func showNotification(title: String, body: String) {
-    func escape(_ s: String) -> String {
-        s.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"")
+/// User notifications. `sink` lets tests (or a host app) capture them instead of showing them.
+public enum Notifier {
+    public static var sink: ((_ title: String, _ body: String) -> Void)?
+
+    public static func show(title: String, body: String) {
+        if let sink = sink { sink(title, body); return }
+        func escape(_ s: String) -> String {
+            s.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"")
+        }
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
+        process.arguments = ["-e", "display notification \"\(escape(body))\" with title \"\(escape(title))\""]
+        process.standardOutput = FileHandle.nullDevice
+        process.standardError = FileHandle.nullDevice
+        try? process.run()
     }
-    let process = Process()
-    process.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
-    process.arguments = ["-e", "display notification \"\(escape(body))\" with title \"\(escape(title))\""]
-    process.standardOutput = FileHandle.nullDevice
-    process.standardError = FileHandle.nullDevice
-    try? process.run()
+}
+
+public func showNotification(title: String, body: String) {
+    Notifier.show(title: title, body: body)
 }

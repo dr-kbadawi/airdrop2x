@@ -33,10 +33,12 @@ public struct Config: Codable {
     /// While the redirect is on, ask every N minutes whether to keep it on (0 disables the reminder).
     public var reminderMinutes: Double = 5
 
-    public static let directory = ProcessInfo.processInfo.environment["AIRDROP2X_CONFIG_DIR"]
+    /// Settings directory. Defaults to the app support folder; AIRDROP2X_CONFIG_DIR overrides it, and
+    /// tests point it at a temporary directory.
+    public static var directory = ProcessInfo.processInfo.environment["AIRDROP2X_CONFIG_DIR"]
         ?? NSHomeDirectory() + "/Library/Application Support/airdrop2x"
-    public static let path = directory + "/config.json"
-    public static let lockPath = directory + "/lock"
+    public static var path: String { directory + "/config.json" }
+    public static var lockPath: String { directory + "/lock" }
 
     public init() {}
 
