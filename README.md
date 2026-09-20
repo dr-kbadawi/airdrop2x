@@ -32,7 +32,15 @@ made, and the app refuses to act if both a real `~/Downloads` and `~/Downloads.l
 ```
 
 Produces `dist/AirDrop2X.app` (menu bar app) and `dist/airdrop2x` (command-line companion).
-Copy the app to `/Applications` and open it. It shows an arrow-in-circle icon in the menu bar.
+Copy the app to `/Applications` and open it. It shows the AirDrop2X glyph in the menu bar.
+
+```bash
+./make-dmg.sh
+```
+
+Produces `dist/AirDrop2X-<version>.dmg`, a drag-and-drop installer with an Applications shortcut.
+Ready-made images are attached to the [releases](https://github.com/dr-kbadawi/airdrop2x/releases).
+The app is ad-hoc signed, so on first launch right-click it and choose Open.
 
 ## Use
 
