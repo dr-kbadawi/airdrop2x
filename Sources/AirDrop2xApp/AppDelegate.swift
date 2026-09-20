@@ -315,17 +315,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let copyright = info["NSHumanReadableCopyright"] as? String ?? ""
         let icon = NSApp.applicationIconImage
         icon?.size = NSSize(width: 72, height: 72)
-        Dialog.show(title: "AirDrop2X",
-                    text: """
-                    Version \(version) (\(build))
+        let choice = Dialog.show(title: "AirDrop2X",
+                                 text: """
+                                 Version \(version) (\(build))
 
-                    Makes AirDrop deliver files straight into a folder of your choosing, on any disk or volume. \
-                    Switch it on, AirDrop lands there. Switch it off, Downloads is back to normal.
+                                 Makes AirDrop deliver files straight into a folder of your choosing, on any disk or volume. \
+                                 Switch it on, AirDrop lands there. Switch it off, Downloads is back to normal.
 
-                    \(copyright)
-                    Free software, released under the GNU General Public License v3.0.
-                    """,
-                    image: icon)
+                                 airdrop2x.techtag.ch
+
+                                 \(copyright)
+                                 Free software, released under the GNU General Public License v3.0.
+                                 """,
+                                 image: icon,
+                                 buttons: ["Visit Website", "OK"])
+        if choice == 0, let url = URL(string: "https://airdrop2x.techtag.ch/") {
+            NSWorkspace.shared.open(url)
+        }
     }
 
     @objc private func quit() {

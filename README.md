@@ -1,5 +1,7 @@
 # AirDrop2X
 
+**Website: [airdrop2x.techtag.ch](https://airdrop2x.techtag.ch/)** · [Download the latest release](https://github.com/dr-kbadawi/airdrop2x/releases/latest/download/AirDrop2X.dmg)
+
 A macOS menu bar app that makes AirDrop deliver files straight into a folder of your choosing,
 on any disk or volume, instead of `~/Downloads`. Switch it on, AirDrop lands in your folder.
 Switch it off, Downloads is back to normal.
