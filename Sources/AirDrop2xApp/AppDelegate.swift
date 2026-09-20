@@ -8,6 +8,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var status: Redirect.Status = .inactive
     private lazy var setup = SetupWindowController(daemon: daemon)
     private var menuIsOpen = false
+    private var reminder: Timer?
+    private var reminderShowing = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         Log.filePath = NSHomeDirectory() + "/Library/Logs/airdrop2x.log"
@@ -21,6 +23,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             self?.status = status
             self?.updateIcon()
             self?.refreshMenuIfOpen()
+            self?.syncReminder()
         }
         daemon.onArrival = { [weak self] event in self?.handleArrival(event) }
         daemon.start()
@@ -42,6 +45,45 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             }
         }
         return .terminateNow
+    }
+
+    // MARK: Reminder — people forget the redirect on, so ask periodically while it is active.
+
+    private func syncReminder() {
+        let minutes = Config.load().reminderMinutes
+        if status.isActive, minutes > 0 {
+            if reminder == nil { scheduleReminder(minutes: minutes) }
+        } else {
+            reminder?.invalidate()
+            reminder = nil
+        }
+    }
+
+    private func scheduleReminder(minutes: Double) {
+        reminder?.invalidate()
+        let timer = Timer(timeInterval: minutes * 60, repeats: false) { [weak self] _ in self?.askToKeepOn() }
+        RunLoop.main.add(timer, forMode: .common)   // fires even while a menu is open
+        reminder = timer
+    }
+
+    private func askToKeepOn() {
+        reminder = nil
+        guard status.isActive, !reminderShowing else { return }
+        let config = Config.load()
+        guard let destination = config.destination else { return }
+        reminderShowing = true
+        Log.info("reminder: asking whether to keep the redirect on")
+        statusItem.menu?.cancelTracking()
+        let choice = Dialog.show(title: "AirDrop is still being redirected",
+                                 text: "Files you receive by AirDrop are landing in \(shortPath(destination)), not in Downloads.\n\nKeep redirecting?",
+                                 symbol: "arrow.turn.down.right", tint: .systemGreen,
+                                 buttons: ["Done, switch it off", "Yes, keep it on"])
+        reminderShowing = false
+        if choice == 0 {
+            setRedirect(false)
+        } else if status.isActive, config.reminderMinutes > 0 {
+            scheduleReminder(minutes: config.reminderMinutes)
+        }
     }
 
     // MARK: Menu

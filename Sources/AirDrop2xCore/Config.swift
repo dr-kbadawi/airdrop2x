@@ -30,6 +30,8 @@ public struct Config: Codable {
     public var notify: Bool = true
     /// A file has been seen arriving in the destination: the one-time Full Disk Access setup for sharingd is done.
     public var grantVerified: Bool = false
+    /// While the redirect is on, ask every N minutes whether to keep it on (0 disables the reminder).
+    public var reminderMinutes: Double = 5
 
     public static let directory = ProcessInfo.processInfo.environment["AIRDROP2X_CONFIG_DIR"]
         ?? NSHomeDirectory() + "/Library/Application Support/airdrop2x"
@@ -48,6 +50,7 @@ public struct Config: Codable {
         pollSeconds     = try c.decodeIfPresent(Double.self, forKey: .pollSeconds) ?? d.pollSeconds
         notify          = try c.decodeIfPresent(Bool.self, forKey: .notify) ?? d.notify
         grantVerified   = try c.decodeIfPresent(Bool.self, forKey: .grantVerified) ?? d.grantVerified
+        reminderMinutes = try c.decodeIfPresent(Double.self, forKey: .reminderMinutes) ?? d.reminderMinutes
     }
 
     public static func load() -> Config {
@@ -77,6 +80,7 @@ public struct Config: Codable {
         poll seconds:      \(pollSeconds)
         notify:            \(notify)
         grant verified:    \(grantVerified)
+        reminder minutes:  \(reminderMinutes)
         """
     }
 }

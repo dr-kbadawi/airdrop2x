@@ -42,6 +42,10 @@ Copy the app to `/Applications` and open it. It shows an arrow-in-circle icon in
 3. Untick it when done. Downloads is normal again.
 4. Optional: **Start at Login**.
 
+While the redirect is on, the app asks every 5 minutes whether to keep it on ("Yes, keep it on" /
+"Done, switch it off"), so it does not stay on by accident. The interval is the `reminderMinutes`
+setting in the config file; 0 disables the reminder.
+
 On first use macOS asks the app for permission to access the Downloads folder. Allow it.
 
 ### First-time setup (required once)
