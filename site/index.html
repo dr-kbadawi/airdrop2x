@@ -70,6 +70,10 @@
   .state { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
   .green { background: #34c759; } .orange { background: #ff9f0a; } .grey { background: #8e8e93; }
   .note { color: var(--ink-3); font-size: 13.5px; margin: 10px 0 0; }
+  figure { margin: 22px 0 0; }
+  figure img { display: block; width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--line); box-shadow: 0 10px 30px rgba(0,0,0,.12); }
+  figure.menu img { max-width: 480px; margin: 0 auto; }
+  figcaption { color: var(--ink-3); font-size: 13.5px; margin: 10px 0 0; text-align: center; }
   details { border-top: 1px solid var(--line); padding: 14px 0; }
   details:last-of-type { border-bottom: 1px solid var(--line); }
   summary { cursor: pointer; font-weight: 600; font-size: 16.5px; list-style: none; display: flex; justify-content: space-between; gap: 12px; }
@@ -148,6 +152,10 @@
       <p>Switching off removes the link and renames the parked folder back. Your downloads, their order, their dates: all exactly as before.</p>
     </div>
   </div>
+  <figure class="menu">
+    <img src="menu.png" alt="The AirDrop2X menu: a green status line reading “AirDrop lands in: ~/Documents/myCustomAirdropFolder”, the destination with a clear button, the Redirect AirDrop switch on, and items for changing the destination, the setup guide, Finder, Start at Login, About and Quit." width="932" height="612" loading="lazy">
+    <figcaption>The whole app is this menu. The status line is green while the redirect is in effect.</figcaption>
+  </figure>
 </section>
 
 <section id="safe">
@@ -188,6 +196,10 @@
     <li>Turn on <b>Redirect AirDrop</b>. The first time, the setup guide appears; follow it and send yourself a test file.</li>
     <li>AirDrop away. Turn the switch off when you are done, or let the reminder do it for you.</li>
   </ol>
+  <figure>
+    <img src="desktop.webp" alt="A Mac desktop with the AirDrop2X icon in the menu bar shown green, its menu open, and the About dialog with the app icon, version and licence." width="1948" height="1744" loading="lazy">
+    <figcaption>In the menu bar next to your other tools, with the About dialog open.</figcaption>
+  </figure>
   <p class="note" style="margin-top:14px">Prefer the Terminal? The repository’s command-line companion (built from source) does the same: <code>airdrop2x destination &lt;folder&gt;</code>, <code>airdrop2x on</code>, <code>airdrop2x off</code>, <code>airdrop2x status</code>. It shares the app’s settings.</p>
 </section>
 

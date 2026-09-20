@@ -6,6 +6,8 @@ A macOS menu bar app that makes AirDrop deliver files straight into a folder of 
 on any disk or volume, instead of `~/Downloads`. Switch it on, AirDrop lands in your folder.
 Switch it off, Downloads is back to normal.
 
+<p align="center"><img src="site/menu.png" width="466" alt="The AirDrop2X menu with the redirect switched on"></p>
+
 ## How it works
 
 macOS has no setting for the AirDrop destination. `sharingd` (the system daemon behind AirDrop)
@@ -61,6 +63,8 @@ profile name is the `NOTARY_PROFILE` variable. Ready-made, notarized images are 
 2. Tick **Redirect AirDrop**. The icon fills in and the menu shows where AirDrop lands.
 3. Untick it when done. Downloads is normal again.
 4. Optional: **Start at Login**.
+
+<p align="center"><img src="site/desktop.webp" width="720" alt="AirDrop2X in the menu bar with its menu and About dialog open"></p>
 
 While the redirect is on, the app asks every 5 minutes whether to keep it on ("Yes, keep it on" /
 "Done, switch it off"), so it does not stay on by accident. The interval is the `reminderMinutes`
