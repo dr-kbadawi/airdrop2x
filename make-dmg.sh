@@ -1,16 +1,22 @@
 #!/bin/bash
-# Builds a distributable disk image: dist/AirDrop2X-<version>.dmg containing AirDrop2X.app and an
-# Applications shortcut, so installing is drag-and-drop. Runs build-app.sh first.
+# Builds a distributable disk image AirDrop2X-<version>.dmg in OUT_DIR (default dist), containing
+# AirDrop2X.app and an Applications shortcut for drag-and-drop install. Runs build-app.sh first unless SKIP_BUILD=1.
 set -euo pipefail
 cd "$(dirname "$0")"
-./build-app.sh
-VERSION=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' dist/AirDrop2X.app/Contents/Info.plist)
-DMG="dist/AirDrop2X-$VERSION.dmg"
+SIGN_IDENTITY="${SIGN_IDENTITY:--}"
+OUT="${OUT_DIR:-dist}"
+[ "${SKIP_BUILD:-0}" = "1" ] || ./build-app.sh
+VERSION=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$OUT/AirDrop2X.app/Contents/Info.plist")
+DMG="$OUT/AirDrop2X-$VERSION.dmg"
 STAGE=$(mktemp -d)
-cp -R dist/AirDrop2X.app "$STAGE/"
+cp -R "$OUT/AirDrop2X.app" "$STAGE/"
 ln -s /Applications "$STAGE/Applications"
 rm -f "$DMG"
 hdiutil create -quiet -volname "AirDrop2X $VERSION" -srcfolder "$STAGE" -ov -format UDZO "$DMG"
 rm -rf "$STAGE"
-codesign --force --sign - "$DMG" >/dev/null 2>&1 || true
+if [ "$SIGN_IDENTITY" = "-" ]; then
+    codesign --force --sign - "$DMG" >/dev/null 2>&1 || true
+else
+    codesign --force --sign "$SIGN_IDENTITY" --timestamp "$DMG"
+fi
 echo "built $DMG ($(du -h "$DMG" | cut -f1))"

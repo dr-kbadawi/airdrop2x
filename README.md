@@ -39,8 +39,18 @@ Copy the app to `/Applications` and open it. It shows the AirDrop2X glyph in the
 ```
 
 Produces `dist/AirDrop2X-<version>.dmg`, a drag-and-drop installer with an Applications shortcut.
-Ready-made images are attached to the [releases](https://github.com/dr-kbadawi/airdrop2x/releases).
-The app is ad-hoc signed, so on first launch right-click it and choose Open.
+Local builds are ad-hoc signed, so on first launch right-click the app and choose Open.
+
+```bash
+./release.sh
+```
+
+Release pipeline: signs the app with the Developer ID certificate (hardened runtime, secure
+timestamp), submits it for notarization, staples the ticket, builds the disk image from the stapled
+app, notarizes and staples that too, and verifies both with Gatekeeper. The notarization
+credentials must be stored once in the keychain with `xcrun notarytool store-credentials`; the
+profile name is the `NOTARY_PROFILE` variable. Ready-made, notarized images are attached to the
+[releases](https://github.com/dr-kbadawi/airdrop2x/releases).
 
 ## Use
 
