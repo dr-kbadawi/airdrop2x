@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AirDrop2X</title>
+<meta name="description" content="Make AirDrop deliver files straight into a folder of your choosing on macOS, on any disk, instead of Downloads. Free and open source, GPL-3.0.">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta property="og:title" content="AirDrop2X">
+<meta property="og:description" content="AirDrop lands where you want it: any folder, any disk. Switch it on, files land there. Switch it off, Downloads is back to normal.">
+<meta property="og:image" content="https://airdrop2x.techtag.ch/icon.png">
+<style>
+  :root {
+    --bg: #ffffff; --bg-2: #f5f6f8; --ink: #17191d; --ink-2: #4b5160; --ink-3: #7a8091;
+    --line: #e3e5ea; --accent: #1a6ff0; --accent-ink: #ffffff; --accent-soft: #e9f1fe;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Inter, system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #101216; --bg-2: #171a20; --ink: #eef0f4; --ink-2: #b4bac7; --ink-3: #7d8494;
+      --line: #262a33; --accent: #4a9dff; --accent-ink: #061021; --accent-soft: #14243a;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #101216; --bg-2: #171a20; --ink: #eef0f4; --ink-2: #b4bac7; --ink-3: #7d8494;
+    --line: #262a33; --accent: #4a9dff; --accent-ink: #061021; --accent-soft: #14243a;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.55 var(--sans); }
+  a { color: inherit; }
+  .wrap { max-width: 820px; margin: 0 auto; padding: 0 16px; }
+  header { padding: 56px 0 40px; }
+  .brand { display: flex; align-items: center; gap: 20px; }
+  .brand img { width: 96px; height: 96px; border-radius: 22px; box-shadow: 0 8px 24px rgba(0,0,0,.14); }
+  h1 { font-size: 34px; line-height: 1.15; margin: 0; letter-spacing: -0.02em; }
+  .tag { color: var(--ink-2); margin: 6px 0 0; font-size: 18px; }
+  .lede { font-size: 21px; line-height: 1.45; margin: 28px 0 0; }
+  .lede b { font-weight: 650; }
+  .cta { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 28px 0 0; }
+  .btn { display: inline-block; padding: 13px 20px; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 16px; line-height: 1; }
+  .btn-primary { background: var(--accent); color: var(--accent-ink); }
+  .btn-quiet { border: 1px solid var(--line); color: var(--ink); background: var(--bg); }
+  .meta { color: var(--ink-3); font-size: 14px; margin: 10px 0 0; }
+  nav.toc { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 14px; color: var(--ink-3); margin: 26px 0 0; }
+  nav.toc a { text-decoration: none; }
+  nav.toc a:hover { color: var(--ink); text-decoration: underline; }
+  section { padding: 36px 0; border-top: 1px solid var(--line); }
+  h2 { font-size: 23px; margin: 0 0 14px; letter-spacing: -0.01em; }
+  h3 { font-size: 17px; margin: 22px 0 8px; }
+  p { margin: 0 0 14px; }
+  p:last-child { margin-bottom: 0; }
+  .first { background: var(--accent-soft); border: 1px solid var(--line); border-radius: 14px; padding: 22px 24px; }
+  .first h2 { margin-bottom: 10px; }
+  .first p { font-size: 17.5px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; margin-top: 8px; }
+  .card { background: var(--bg-2); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .card h3 { margin: 0 0 6px; font-size: 16px; }
+  .card p { margin: 0; color: var(--ink-2); font-size: 15px; line-height: 1.5; }
+  ol { padding-left: 22px; margin: 0; }
+  ol li { margin: 0 0 10px; }
+  code { font: 15px var(--mono); background: var(--bg-2); border: 1px solid var(--line); border-radius: 5px; padding: 1px 6px; }
+  .steps { counter-reset: step; list-style: none; padding: 0; margin: 8px 0 0; }
+  .steps li { position: relative; padding-left: 44px; margin: 0 0 14px; }
+  .steps li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 1px;
+    width: 30px; height: 30px; border-radius: 50%; background: var(--accent); color: var(--accent-ink);
+    font-weight: 650; font-size: 15px; display: flex; align-items: center; justify-content: center; }
+  .state { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+  .green { background: #34c759; } .orange { background: #ff9f0a; } .grey { background: #8e8e93; }
+  .note { color: var(--ink-3); font-size: 13.5px; margin: 10px 0 0; }
+  details { border-top: 1px solid var(--line); padding: 14px 0; }
+  details:last-of-type { border-bottom: 1px solid var(--line); }
+  summary { cursor: pointer; font-weight: 600; font-size: 16.5px; list-style: none; display: flex; justify-content: space-between; gap: 12px; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "+"; color: var(--ink-3); font-weight: 400; }
+  details[open] summary::after { content: "–"; }
+  details p { margin-top: 10px; color: var(--ink-2); font-size: 15.5px; }
+  footer { padding: 34px 0 56px; border-top: 1px solid var(--line); color: var(--ink-3); font-size: 14px; }
+  footer p { margin: 0 0 6px; }
+  @media (max-width: 520px) {
+    header { padding-top: 40px; }
+    .brand img { width: 72px; height: 72px; border-radius: 17px; }
+    h1 { font-size: 28px; } .lede { font-size: 19px; }
+    .first { padding: 18px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="brand">
+    <img src="icon.png" alt="" width="96" height="96">
+    <div>
+      <h1>AirDrop2X</h1>
+      <p class="tag">AirDrop lands where you want it. Any folder, any disk. Free and open source.</p>
+    </div>
+  </div>
+  <p class="lede">
+    macOS drops every AirDrop into <b>Downloads</b> on the internal disk, and there is no setting to change that.
+    AirDrop2X gives you the switch Apple left out: choose a folder — on an external SSD, another volume,
+    wherever — and while the switch is on, files you receive land there <b>directly</b>. Switch it off and
+    Downloads is back to normal.
+  </p>
+  <div class="cta">
+    <a class="btn btn-primary" href="https://github.com/dr-kbadawi/airdrop2x/releases/latest/download/AirDrop2X.dmg">Download for macOS</a>
+    <a class="btn btn-quiet" href="https://github.com/dr-kbadawi/airdrop2x">Source on GitHub</a>
+  </div>
+  <p class="meta">Version 0.2.1 · macOS 13 or later · Apple Silicon · 0.8 MB · notarized by Apple</p>
+  <nav class="toc">
+    <a href="#why">Why</a>
+    <a href="#how">How it works</a>
+    <a href="#safe">Built to be safe</a>
+    <a href="#setup">The one-time setup</a>
+    <a href="#install">Install</a>
+    <a href="#faq">FAQ</a>
+  </nav>
+</header>
+
+<section id="why">
+  <div class="first">
+    <h2>The Downloads detour</h2>
+    <p>Backing up 4K video from an iPhone by AirDrop goes like this: wait for the file to land in Downloads, copy it to the external disk, delete it from Downloads to make room for the next one, repeat. Every file crosses the internal disk twice for no reason, and if a clip is bigger than the free space left, it does not arrive at all.</p>
+    <p><b>AirDrop2X removes the detour.</b> The file is written by macOS straight into the folder you chose. Nothing is copied afterwards, nothing has to be cleaned up, and the internal disk is never involved.</p>
+  </div>
+</section>
+
+<section id="how">
+  <h2>How it works</h2>
+  <p>The AirDrop daemon in macOS, <code>sharingd</code>, asks the system for the user’s Downloads folder and writes there. There is no preference for it. But before writing, it resolves the real location of that folder, symbolic links included. That is the one lever there is, and AirDrop2X pulls it: while the switch is on, <code>~/Downloads</code> points at your destination; your real Downloads folder is parked next to it, untouched, and comes back the moment you switch off.</p>
+  <div class="grid">
+    <div class="card">
+      <h3>Any folder, any disk</h3>
+      <p>Internal disk, external SSD, another partition, a disk image. If it is a folder you can write to, it can be the destination.</p>
+    </div>
+    <div class="card">
+      <h3>A switch, not a setting</h3>
+      <p>On for the backup session, off when you are done. A menu bar icon shows the state at a glance: <span class="state green"></span>redirecting, <span class="state orange"></span>off or waiting for the disk, <span class="state grey"></span>no destination yet.</p>
+    </div>
+    <div class="card">
+      <h3>Nothing is copied</h3>
+      <p>Files are not moved after arrival. macOS writes them to the destination in the first place, so a 20 GB clip needs 20 GB on the destination and nothing on the Mac.</p>
+    </div>
+    <div class="card">
+      <h3>Reversible in one rename</h3>
+      <p>Switching off removes the link and renames the parked folder back. Your downloads, their order, their dates: all exactly as before.</p>
+    </div>
+  </div>
+</section>
+
+<section id="safe">
+  <h2>Built to be safe</h2>
+  <p>Anything that touches your Downloads folder has to be paranoid. AirDrop2X never deletes anything except the link it made itself, and refuses to act whenever the folders are not in a state it recognises. On top of that:</p>
+  <div class="grid">
+    <div class="card">
+      <h3>Unplugged disk? Restored.</h3>
+      <p>If the destination disappears — disk unplugged, share dropped, folder renamed — the real Downloads folder is back within two seconds, so nothing ever points into the void. When the disk returns, the redirect resumes.</p>
+    </div>
+    <div class="card">
+      <h3>Quit, crash, reboot</h3>
+      <p>Quitting the app restores Downloads. After a crash, the next launch inspects what it finds and puts things right before doing anything else. The switch is only on when the redirect is genuinely in effect.</p>
+    </div>
+    <div class="card">
+      <h3>No file is lost</h3>
+      <p>If macOS ever refuses the redirect and falls back to its temporary folder, AirDrop2X notices within seconds, moves the file to your destination, and tells you what happened and why.</p>
+    </div>
+    <div class="card">
+      <h3>It nags, on purpose</h3>
+      <p>People forget switches. While the redirect is on, every five minutes a small dialog asks whether to keep it on. One click either way.</p>
+    </div>
+  </div>
+</section>
+
+<section id="setup">
+  <h2>The one-time setup</h2>
+  <p>There is one thing only you can do. Since the file is written by Apple’s daemon and not by the app, the daemon needs permission to write outside Downloads. macOS grants that only through <b>Full Disk Access</b> in System Settings, and no app can add an entry there on another program’s behalf — by design.</p>
+  <p>AirDrop2X makes it a two-minute job the first time you switch on: it opens the right page, puts the exact path on your clipboard, and walks you through the four clicks. Then it asks you to AirDrop any file to your Mac and watches where it lands. If it arrives in your folder, setup is done for good. If not, the app moves the file to your folder anyway and shows you the reason straight from the system log.</p>
+  <p class="note">Why a real transfer instead of a check box: the permission belongs to sharingd, not to the app, and macOS lets no app read another program’s permissions. The only honest test is watching the daemon write a file.</p>
+</section>
+
+<section id="install">
+  <h2>Install</h2>
+  <ol class="steps">
+    <li>Open the DMG and drag <b>AirDrop2X</b> to Applications, then open it. It lives in the menu bar; allow the Downloads access prompt.</li>
+    <li>Click the icon, choose <b>Choose Destination…</b> and pick your folder.</li>
+    <li>Turn on <b>Redirect AirDrop</b>. The first time, the setup guide appears; follow it and send yourself a test file.</li>
+    <li>AirDrop away. Turn the switch off when you are done, or let the reminder do it for you.</li>
+  </ol>
+  <p class="note" style="margin-top:14px">Prefer the Terminal? The repository’s command-line companion (built from source) does the same: <code>airdrop2x destination &lt;folder&gt;</code>, <code>airdrop2x on</code>, <code>airdrop2x off</code>, <code>airdrop2x status</code>. It shares the app’s settings.</p>
+</section>
+
+<section id="faq">
+  <h2>Questions</h2>
+
+  <details>
+    <summary>Does it change anything else on my Mac?</summary>
+    <p>While the switch is on, everything that saves into <code>~/Downloads</code> by path — Safari, Mail, anything — lands in your destination too, because that is what the path resolves to. Many people want exactly that during a backup session. If you do not, switch off between transfers; it takes one click and is instant.</p>
+  </details>
+  <details>
+    <summary>Is it safe to use on my real Downloads folder?</summary>
+    <p>The only operations are a rename of the folder, a symbolic link, and the reverse. No file inside Downloads is ever read, moved or deleted. The state machine that does this is covered by a test suite exercising every transition, including crash leftovers, and the app refuses to proceed whenever the folders are not in a state it recognises.</p>
+  </details>
+  <details>
+    <summary>Why does the AirDrop daemon need Full Disk Access?</summary>
+    <p>macOS guards external and network volumes per program. A regular app gets a permission dialog the first time it touches one; a background daemon has no window to ask with, so its answer is a silent no. Apple pre-grants its daemons what they need through entitlements, and sharingd was never given external volumes because Apple never expected it to write anywhere but Downloads. Adding it to Full Disk Access is how you, the user, give it that permission. It is one entry, once.</p>
+  </details>
+  <details>
+    <summary>What if I unplug the disk while the switch is on?</summary>
+    <p>Within two seconds the real Downloads folder is back and the menu bar icon turns orange with “waiting for … to come back”. Plug the disk in again and the redirect resumes by itself. If you quit and relaunch the app while the disk is away, the switch turns itself off and tells you why.</p>
+  </details>
+  <details>
+    <summary>Finder’s sidebar still shows my old downloads. Why?</summary>
+    <p>Finder’s sidebar and the Dock’s Downloads stack track the folder by identity rather than by name, so while the redirect is on they may keep pointing at the parked folder. It is cosmetic and reverts when you switch off. Use “Show Destination in Finder” from the menu to see arrivals.</p>
+  </details>
+  <details>
+    <summary>Does it work with network shares?</summary>
+    <p>The mechanism is the same and the Full Disk Access grant covers network volumes too, but it has only been exercised with local disks so far. Treat network destinations as untested.</p>
+  </details>
+  <details>
+    <summary>Which Macs and macOS versions?</summary>
+    <p>Built and tested on macOS 26 on Apple Silicon. The code targets macOS 13 and later, but earlier versions have not been tried, and there is no Intel build yet.</p>
+  </details>
+  <details>
+    <summary>Is it really free? What’s the catch?</summary>
+    <p>Free, open source under the GPL-3.0, no account, no telemetry, no paid tier. It exists because one person got tired of the Downloads detour and found that macOS leaves exactly one honest way around it. Techtag GmbH built it and is giving it away.</p>
+  </details>
+  <details>
+    <summary>I found a bug. Where do I report it?</summary>
+    <p><a href="https://github.com/dr-kbadawi/airdrop2x/issues">GitHub issues</a>. Include the macOS version, where the destination lives, what the menu bar showed, and the last lines of <code>~/Library/Logs/airdrop2x.log</code>.</p>
+  </details>
+</section>
+
+<section>
+  <h2>How it’s built</h2>
+  <p>A small Swift app with no dependencies: a core library that owns the redirect state machine and the watchers, a menu bar app on top, and a command-line companion sharing the same settings. Everything is under the GPL-3.0, with a test suite for the core, the app and the command-line tool, run on every change. The investigation of how sharingd chooses its destination — the disassembly, the sandbox profiles, the permission checks — is written up in <a href="https://github.com/dr-kbadawi/airdrop2x/blob/main/docs/HOW-IT-WORKS.md">docs/HOW-IT-WORKS.md</a> so that anyone can verify the claims on this page.</p>
+</section>
+
+<footer>
+  <p>Copyright © 2026 Techtag GmbH. Free software under the <a href="https://github.com/dr-kbadawi/airdrop2x/blob/main/LICENSE">GNU GPL v3</a>; no warranty.</p>
+  <p><a href="https://github.com/dr-kbadawi/airdrop2x/releases">All releases</a> · <a href="https://github.com/dr-kbadawi/airdrop2x/issues">Report a problem</a> · <a href="https://ntfs.techtag.ch">TT NTFS Native</a>, from the same workshop</p>
+</footer>
+
+</div>
+</body>
+</html>

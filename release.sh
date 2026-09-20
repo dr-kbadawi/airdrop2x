@@ -39,4 +39,5 @@ xcrun stapler validate "$DMG"
 
 mkdir -p dist
 cp "$DMG" "$OUT_DIR/AirDrop2X-$VERSION.zip" dist/
+cp "$DMG" dist/AirDrop2X.dmg   # unversioned copy: the website links to releases/latest/download/AirDrop2X.dmg
 echo "release artifacts: dist/AirDrop2X-$VERSION.dmg  dist/AirDrop2X-$VERSION.zip"
